@@ -3,6 +3,7 @@ use clap::Parser;
 use copypasta_ext::prelude::*;
 use copypasta_ext::x11_fork::ClipboardContext;
 use reqwest;
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use spinners_rs::{Spinner, Spinners};
@@ -30,6 +31,20 @@ struct APIResponse {
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+fn too_many_requests(){
+    println!("\n\nNo free requests left! Please visit http://getaido.app for more info.\n");
+}
+
+fn unauthorized(){
+    println!("Unauthorized request, please visit http://getaido.app for more info.");
+}
+
+fn other_error(other: &StatusCode){
+    println!(
+        "Uh oh! Looks like we have problems with our server: {:?}",
+        other
+    );
+}
 
 async fn get_command(args: Cli, host: &str) {
     let mut sp = Spinner::new(Spinners::Dots, "Looking up your command...");
@@ -71,16 +86,13 @@ async fn get_command(args: Cli, host: &str) {
             };
         }
         reqwest::StatusCode::UNAUTHORIZED => {
-            println!("Unauthorized request, please visit http://getaido.app for more info.");
+            unauthorized();
         }
         reqwest::StatusCode::TOO_MANY_REQUESTS => {
-            println!("No free credits left! Please visit http://getaido.app for more info.");
+            too_many_requests();
         }
         other => {
-            println!(
-                "Uh oh! Looks like we have problems with our server: {:?}",
-                other
-            );
+            other_error(&other);
         }
     };
 }
@@ -120,16 +132,13 @@ async fn explain_command(args: Cli, host: &str) {
             };
         }
         reqwest::StatusCode::UNAUTHORIZED => {
-            println!("Unauthorized request, please visit http://getaido.app for more info.");
+            unauthorized();
         }
         reqwest::StatusCode::TOO_MANY_REQUESTS => {
-            println!("No free credits left! Please visit http://getaido.app for more info.");
+            too_many_requests();
         }
         other => {
-            println!(
-                "Uh oh! Looks like we have problems with our server: {:?}",
-                other
-            );
+            other_error(&other);
         }
     };
 }
