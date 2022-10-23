@@ -2,12 +2,15 @@ use clap::CommandFactory;
 use clap::Parser;
 use copypasta_ext::prelude::*;
 use copypasta_ext::x11_fork::ClipboardContext;
+use home::home_dir;
 use reqwest;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use spinners_rs::{Spinner, Spinners};
+use std::fs;
 use tokio;
+
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, trailing_var_arg = true)]
@@ -143,6 +146,27 @@ async fn explain_command(args: Cli, host: &str) {
     };
 }
 
+fn first_usage(){
+    let home_path = home_dir();
+    let aido_path = home_path.unwrap().join(".aido");
+    let _result = fs::create_dir_all(aido_path);
+    let home_path = home_dir();
+    let file_path = home_path.unwrap().join(".aido/.intro");
+    std::fs::File::create(file_path).expect("File creation failed.");
+
+    println!("\n---------------------------------\n");
+    println!("✨✨✨ Welcome to aido! ✨✨✨\n");
+    println!("IMPORTANT:");
+    println!("Aido uses a deeplearning model to automatically generate the command that you are looking for. Auto-generated commands can be dangerous because they can easily include syntax errors that can cause problems when the commands are executed. In addition, auto-generated commands can sometimes generate unexpected results that can be difficult to troubleshoot. Please always check the command before executing it.");
+    println!("\nBy using this service, you agree that getaido.app is not to be held liable for any decisions you make or commands executed based on any of our services.\n");
+    println!("---------------------------------\n\n");
+}
+
+fn is_first_usage() -> bool{
+    let home_path = home_dir();
+    return !home_path.unwrap().join(".aido/.intro").exists();
+}
+
 #[tokio::main]
 async fn main() {
     let host: &str;
@@ -150,6 +174,10 @@ async fn main() {
         host = "http://127.0.0.1:8000";
     } else {
         host = "https://getaido.app";
+    }
+
+    if is_first_usage(){
+        first_usage();
     }
 
     let args = Cli::parse();
