@@ -159,6 +159,8 @@ fn first_usage(){
     println!("IMPORTANT:");
     println!("Aido uses a deeplearning model to automatically generate the command that you are looking for. Auto-generated commands can be dangerous because they can easily include syntax errors that can cause problems when the commands are executed. In addition, auto-generated commands can sometimes generate unexpected results that can be difficult to troubleshoot. Please always check the command before executing it.");
     println!("\nBy using this service, you agree that getaido.app is not to be held liable for any decisions you make or commands executed based on any of our services.\n");
+    println!("This welcome message will only be shown once on the first usage. If you encounter any issues please file a github issue (https://github.com/kris7ian/aido-cli/issues).\n");
+    println!("You can start using aido now.\n");
     println!("---------------------------------\n\n");
 }
 
@@ -178,6 +180,7 @@ async fn main() {
 
     if is_first_usage(){
         first_usage();
+        return;
     }
 
     let args = Cli::parse();
