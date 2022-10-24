@@ -1,6 +1,7 @@
 #!/bin/sh
 # poooh@aikipooh.name
 
+#baseurl=https://github.com/kris7ian/aido-cli/releases/tag/v0.5.4
 baseurl=https://github.com/kris7ian/aido-cli/releases/latest/download
 
 # aido-aarch64-apple-darwin.tar.gz
@@ -28,7 +29,7 @@ add_to_shrc() {
 
 case `uname -m` in
   x86_64) mach="x86_64";;
-  arm) mach="aarch64";;
+  arm|arm64) mach="aarch64";;
 esac
 
 case `uname -s` in
@@ -57,7 +58,10 @@ if true; then
       exit 1
     }
   }
-fi
+fi || {
+  log "There was a problem with the installation"
+  exit 1
+}
 
 # Check we're already in the PATH
 if ! echo $PATH|awk 'BEGIN{RS=":"}{print}'|grep -q $bindir$; then
