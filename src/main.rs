@@ -1,16 +1,15 @@
 use clap::CommandFactory;
 use clap::Parser;
-use copypasta_ext::prelude::*;
-use copypasta_ext::x11_fork::ClipboardContext;
+use clap::Subcommand;
+use dialoguer::Input;
+use dialoguer::Password;
 use home::home_dir;
-use reqwest;
-use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
-use spinners_rs::{Spinner, Spinners};
 use std::fs;
 use tokio;
 
+mod authentication;
+mod lib;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, trailing_var_arg = true)]
@@ -24,6 +23,19 @@ struct Cli {
     /// Description of what you want to do
     #[clap(multiple_values = true, allow_hyphen_values = false)]
     description: Vec<String>,
+
+    #[clap(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Register
+    Register,
+    /// Login with your email
+    Login,
+    /// Logout
+    Logout,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -32,121 +44,7 @@ struct APIResponse {
     message: String,
 }
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-fn too_many_requests(){
-    println!("\n\nNo free requests left! Please visit http://getaido.app for more info.\n");
-}
-
-fn unauthorized(){
-    println!("Unauthorized request, please visit http://getaido.app for more info.");
-}
-
-fn other_error(other: &StatusCode){
-    println!(
-        "Uh oh! Looks like we have problems with our server: {:?}",
-        other
-    );
-}
-
-async fn get_command(args: Cli, host: &str) {
-    let mut sp = Spinner::new(Spinners::Dots, "Looking up your command...");
-    sp.start();
-
-    let description = args.description.join(" ");
-    let mut data = Map::new();
-    data.insert(
-        "description".to_string(),
-        Value::String(description.to_string()),
-    );
-    data.insert("version".to_string(), Value::String(VERSION.to_string()));
-
-    let client = reqwest::Client::new();
-    let result = client
-        .post(host.to_owned() + "/api/1/command/")
-        .json(&data)
-        .send()
-        .await
-        .unwrap();
-
-    match result.status() {
-        reqwest::StatusCode::OK => {
-            match result.json::<APIResponse>().await {
-                Ok(parsed) => {
-                    sp.stop_with_message("Done ✓                        ");
-                    println!("\n\n{:^5}\n", parsed.result);
-                    if args.clipboard {
-                        let mut ctx = ClipboardContext::new().unwrap();
-                        ctx.set_contents(parsed.result.to_owned()).unwrap();
-                        println!("Command copied to clipboard!");
-                    }
-
-                    if !parsed.message.is_empty() {
-                        println!("{:}", parsed.message)
-                    }
-                }
-                Err(_) => println!("Hm, the response didn't match the shape we expected."),
-            };
-        }
-        reqwest::StatusCode::UNAUTHORIZED => {
-            unauthorized();
-        }
-        reqwest::StatusCode::TOO_MANY_REQUESTS => {
-            too_many_requests();
-        }
-        other => {
-            other_error(&other);
-        }
-    };
-}
-
-async fn explain_command(args: Cli, host: &str) {
-    let mut sp = Spinner::new(Spinners::Dots, "Looking up explanation...");
-    sp.start();
-
-    let description = args.description.join(" ");
-    let mut data = Map::new();
-    data.insert(
-        "command".to_string(),
-        Value::String(description.to_string()),
-    );
-    data.insert("version".to_string(), Value::String(VERSION.to_string()));
-
-    let client = reqwest::Client::new();
-    let result = client
-        .post(host.to_owned() + "/api/1/explain/")
-        .json(&data)
-        .send()
-        .await
-        .unwrap();
-
-    match result.status() {
-        reqwest::StatusCode::OK => {
-            match result.json::<APIResponse>().await {
-                Ok(parsed) => {
-                    sp.stop_with_message("Done ✓                        ");
-                    println!("\n\n{:^5}\n", parsed.result);
-
-                    if !parsed.message.is_empty() {
-                        println!("{:}", parsed.message)
-                    }
-                }
-                Err(_) => println!("There was an unexpected error, maybe you need to update aido."),
-            };
-        }
-        reqwest::StatusCode::UNAUTHORIZED => {
-            unauthorized();
-        }
-        reqwest::StatusCode::TOO_MANY_REQUESTS => {
-            too_many_requests();
-        }
-        other => {
-            other_error(&other);
-        }
-    };
-}
-
-fn first_usage(){
+fn first_usage() {
     let home_path = home_dir();
     let aido_path = home_path.unwrap().join(".aido");
     let _result = fs::create_dir_all(aido_path);
@@ -158,13 +56,14 @@ fn first_usage(){
     println!("✨✨✨ Welcome to aido! ✨✨✨\n");
     println!("IMPORTANT:");
     println!("Aido uses a deeplearning model to automatically generate the command that you are looking for. Auto-generated commands can be dangerous because they can easily include syntax errors that can cause problems when the commands are executed. In addition, auto-generated commands can sometimes generate unexpected results that can be difficult to troubleshoot. Please always check the command before executing it.");
+    println!("Please never input any sensitive data!");
     println!("\nBy using this service, you agree that getaido.app is not to be held liable for any decisions you make or commands executed based on any of our services.\n");
     println!("This welcome message will only be shown once on the first usage. If you encounter any issues please file a github issue (https://github.com/kris7ian/aido-cli/issues).\n");
     println!("You can start using aido now.\n");
     println!("---------------------------------\n\n");
 }
 
-fn is_first_usage() -> bool{
+fn is_first_usage() -> bool {
     let home_path = home_dir();
     return !home_path.unwrap().join(".aido/.intro").exists();
 }
@@ -178,21 +77,46 @@ async fn main() {
         host = "https://getaido.app";
     }
 
-    if is_first_usage(){
+    if is_first_usage() {
         first_usage();
         return;
     }
 
     let args = Cli::parse();
 
+    match &args.command {
+        Some(Commands::Register) => {
+            let email: String = Input::new().with_prompt("Email").interact_text().unwrap();
+            let password = &Password::new()
+                .with_prompt("Password")
+                .with_confirmation("Confirm Password", "Passwords mismatching")
+                .interact()
+                .unwrap();
+            authentication::register(&email, password).await;
+            return;
+        }
+        Some(Commands::Login) => {
+            let email: String = Input::new().with_prompt("Email").interact_text().unwrap();
+            let password = &Password::new().with_prompt("Password").interact().unwrap();
+            authentication::login(&email, password).await;
+            return;
+        }
+        Some(Commands::Logout) => {
+            authentication::logout();
+            return;
+        }
+        None => {}
+    }
+
     if args.description.len() == 0 {
         let mut cmd = Cli::command();
         cmd.print_help().unwrap();
     } else {
+        let description = args.description.join(" ");
         if args.explain {
-            explain_command(args, host).await;
+            lib::explain_command(&description, host).await;
         } else {
-            get_command(args, host).await;
+            lib::get_command(&description, host, args.clipboard).await;
         }
     }
 }

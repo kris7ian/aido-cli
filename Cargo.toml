@@ -9,6 +9,7 @@ edition = "2021"
 clap = { version = "3.1", features = ["derive"] }
 copypasta = "0.8.1"
 copypasta-ext = "0.3.9"
+dialoguer = "0.10.2"
 home = "0.5.4"
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
