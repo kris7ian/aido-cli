@@ -1,7 +1,5 @@
 #!/bin/sh
-# poooh@aikipooh.name
 
-#baseurl=https://github.com/kris7ian/aido-cli/releases/tag/v0.5.4
 baseurl=https://github.com/kris7ian/aido-cli/releases/latest/download
 
 # aido-aarch64-apple-darwin.tar.gz
@@ -46,20 +44,20 @@ echo "url: $url"
 
 if true; then
   if ! curl $url -sL; then
-    log "Problem downloading $url. Please check whether your OS/mach is supported."
+    log "Problem downloading $url. Please check whether your OS is supported."
     exit 1
   fi | {
-    log "Downloaded the archive file"
+    log "Downloaded the archive file."
 
     mkdir -p $bindir # Won't object if it exists already
     cd $bindir
     tar xfz - 2>/dev/null || {
-      log "Bad format"
+      log "Bad format."
       exit 1
     }
   }
 fi || {
-  log "There was a problem with the installation"
+  log "There was an unexpected problem with the installation."
   exit 1
 }
 
