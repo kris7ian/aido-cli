@@ -16,7 +16,7 @@ struct APIResponse {
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn too_many_requests() {
-    println!("\n\nNo free requests left! Please visit http://getaido.app for more info.\n");
+    println!("\n\nNo free requests left! Please register your account for FREE to get 20 requests per day!\nSimply type `aido register` into your terminal or login by typing `aido login`.");
 }
 
 fn unauthorized() {

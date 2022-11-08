@@ -55,7 +55,7 @@ pub async fn register(email: &str, password: &str) {
     match result.status() {
         reqwest::StatusCode::CREATED => {
             sp.stop_with_message("Done ✓                        \n");
-            println!("Successfully registered, please check your inbox to confirm your email!");
+            println!("Successfully registered, please check your inbox to confirm your email!\nAfter confirming your email address you can login to your account by typing `aido login` and you'll get 20 free requests per day.");
         }
         reqwest::StatusCode::BAD_REQUEST => {
             sp.stop_with_message("Error ✗                        \n");

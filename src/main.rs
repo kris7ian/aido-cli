@@ -86,6 +86,9 @@ async fn main() {
 
     match &args.command {
         Some(Commands::Register) => {
+            println!("Registration is 100% free and we will never send you spam or sell your data!\nBy registering you get 20 free API calls per day.\n");
+            println!("After filling in your email and desired password you will receive a confirmation mail, after confirming you're email address you can login with `aido login` in the terminal.\n");
+
             let email: String = Input::new().with_prompt("Email").interact_text().unwrap();
             let password = &Password::new()
                 .with_prompt("Password")
