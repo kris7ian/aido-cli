@@ -69,6 +69,7 @@ fi
 
 cat <<EOF
 
-The installation has finished successfully. To use the program right now, pleasse run this command in your current shell session:
-$export_cmd
+The installation has finished successfully! You need to restart your terminal session before you can start using aido.
+After restarting your terminal session type `aido`into your terminal.
+
 EOF
