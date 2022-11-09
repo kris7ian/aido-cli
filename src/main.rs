@@ -52,15 +52,24 @@ fn first_usage() {
     let file_path = home_path.unwrap().join(".aido/.intro");
     std::fs::File::create(file_path).expect("File creation failed.");
 
-    println!("\n---------------------------------\n");
-    println!("✨✨✨ Welcome to aido! ✨✨✨\n");
-    println!("IMPORTANT:");
-    println!("Aido uses a deeplearning model to automatically generate the command that you are looking for. Auto-generated commands can be dangerous because they can easily include syntax errors that can cause problems when the commands are executed. In addition, auto-generated commands can sometimes generate unexpected results that can be difficult to troubleshoot. Please always check the command before executing it.");
-    println!("Please never input any sensitive data!");
-    println!("\nBy using this service, you agree that getaido.app is not to be held liable for any decisions you make or commands executed based on any of our services.\n");
-    println!("This welcome message will only be shown once on the first usage. If you encounter any issues please file a github issue (https://github.com/kris7ian/aido-cli/issues).\n");
-    println!("You can start using aido now.\n");
-    println!("---------------------------------\n\n");
+    let text = "
+    ---------------------------------
+    ✨✨✨ Welcome to aido! ✨✨✨
+
+    IMPORTANT:
+
+    Aido uses a deeplearning model to automatically generate the command that you are looking for. Auto-generated commands can be dangerous because they can easily include syntax errors that can cause problems when the commands are executed. In addition, auto-generated commands can sometimes generate unexpected results that can be difficult to troubleshoot. Please always check the command before executing it.
+    Please never input any sensitive data!
+
+    By using this service, you agree that getaido.app is not to be held liable for any decisions you make or commands executed based on any of our services.
+
+    This welcome message will only be shown once on the first usage. If you encounter any issues please send us an email to info@getaido.app.
+    To see how to use aido type `aido` or `aido --help` into your console.
+    ---------------------------------
+    ";
+    let text = textwrap::dedent(text);
+    println!("{}", textwrap::fill(&text, 75));
+
 }
 
 fn is_first_usage() -> bool {
@@ -86,13 +95,15 @@ async fn main() {
 
     match &args.command {
         Some(Commands::Register) => {
-            println!("Registration is 100% free and we will never send you spam or sell your data!\nBy registering you get 20 free API calls per day.\n");
-            println!("After filling in your email and desired password you will receive a confirmation mail, after confirming you're email address you can login with `aido login` in the terminal.\n");
+            let register_text_1 = "\nRegistration is 100% free and we will never send you spam or sell your data!\nBy registering you get 20 free API calls per day.\n";
+            let register_text_2 = "Please fill in your email address and your desired password you will receive a confirmation mail, after confirming you're email address you can login with `aido login` in the terminal.\n";
+            println!("{}", textwrap::fill(register_text_1, 75));
+            println!("{}", textwrap::fill(register_text_2, 75));
 
             let email: String = Input::new().with_prompt("Email").interact_text().unwrap();
             let password = &Password::new()
                 .with_prompt("Password")
-                .with_confirmation("Confirm Password", "Passwords mismatching")
+                .with_confirmation("Confirm Password", "Passwords don't match")
                 .interact()
                 .unwrap();
             authentication::register(&email, password).await;
