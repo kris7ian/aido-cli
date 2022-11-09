@@ -20,7 +20,7 @@ struct Cli {
     /// Copy the command to the clipboard
     #[clap(short, long)]
     clipboard: bool,
-    /// Description of what you want to do
+    /// Description of the command you want to generate
     #[clap(multiple_values = true, allow_hyphen_values = false)]
     description: Vec<String>,
 

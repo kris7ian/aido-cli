@@ -48,6 +48,7 @@ if true; then
     exit 1
   fi | {
     log "Downloaded the archive file."
+    log "Installing..."
 
     mkdir -p $bindir # Won't object if it exists already
     cd $bindir
@@ -69,7 +70,8 @@ fi
 
 cat <<EOF
 
-The installation has finished successfully! You need to restart your terminal session before you can start using aido.
-After restarting your terminal session type `aido`into your terminal.
+The installation has finished successfully!
+You need to restart your terminal session before you can start using aido.
+After restarting your terminal session type 'aido' into your terminal.
 
 EOF
